@@ -1475,5 +1475,258 @@
     });
 </script>
 
+<!-- ================= AI ANALYSIS SCREEN ================= -->
+<div id="aiAnalysisScreen" class="screen">
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo">A</div>
+            <div class="header-title">
+                <h1>AI ANALYSIS</h1>
+                <span>● MARKET SCANNER</span>
+            </div>
+        </div>
+        <div class="bell-icon">🤖</div>
+    </div>
+
+    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px; line-height: 1.6;">
+        Analyze live gold market data with AI-powered indicators (EMA, RSI, Trend) and get a suggested trade.
+    </p>
+
+    <button class="btn-block" onclick="runAIAnalysis()" id="aiAnalyzeBtn" style="margin-bottom: 20px;">
+        🤖 Analyze Market Now
+    </button>
+
+    <div id="aiLoading" class="hidden" style="text-align: center; padding: 30px;">
+        <div style="font-size: 40px; margin-bottom: 12px;">⏳</div>
+        <p style="color: var(--gold); font-weight: 700;">Analyzing live market data...</p>
+        <p style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">Fetching candles, calculating indicators...</p>
+    </div>
+
+    <div id="aiResult" class="hidden"></div>
+
+    <div id="aiEmpty" class="empty-state">
+        <div class="icon">🤖</div>
+        <h3>Ready to Analyze</h3>
+        <p>Press the button above to get an AI trade suggestion.</p>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-item" onclick="showScreen('dashboardScreen')">
+            <span class="icon">📊</span>
+            <span>Dashboard</span>
+        </button>
+        <button class="nav-item" onclick="showScreen('usersScreen')">
+            <span class="icon">👥</span>
+            <span>Users</span>
+        </button>
+        <button class="nav-item active" onclick="showScreen('aiAnalysisScreen')">
+            <span class="icon">🤖</span>
+            <span>AI</span>
+        </button>
+        <button class="nav-item" onclick="showScreen('sendSignalScreen')">
+            <span class="icon">📤</span>
+            <span>Signal</span>
+        </button>
+    </div>
+</div>
+
+<!-- ================= AI LOGIC ================= -->
+<script>
+    async function runAIAnalysis() {
+        const btn = document.getElementById('aiAnalyzeBtn');
+        const loading = document.getElementById('aiLoading');
+        const result = document.getElementById('aiResult');
+        const empty = document.getElementById('aiEmpty');
+
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        loading.classList.remove('hidden');
+        result.classList.add('hidden');
+        empty.classList.add('hidden');
+
+        try {
+            const url = 'https://api.binance.com/api/v3/klines?symbol=PAXGUSDT&interval=1h&limit=100';
+            const res = await fetch(url);
+            
+            if (!res.ok) throw new Error('API Error');
+            
+            const candles = await res.json();
+            
+            if (!candles || candles.length < 50) throw new Error('Not enough data');
+
+            const lastCandle = candles[candles.length - 1];
+            const currentPrice = parseFloat(lastCandle[4]);
+            
+            const closes = candles.map(c => parseFloat(c[4]));
+            const ema20 = calculateEMA(closes, 20);
+            const ema50 = calculateEMA(closes, 50);
+            const rsi = calculateRSI(closes, 14);
+            
+            const trend = ema20 > ema50 ? 'UP' : 'DOWN';
+            const trendStrength = Math.abs((ema20 - ema50) / ema50) * 100;
+            
+            let direction = 'WAIT';
+            let confidence = 50;
+            
+            if (rsi < 30 && trend === 'UP') {
+                direction = 'BUY';
+                confidence = 75 + Math.min(20, (30 - rsi));
+            } else if (rsi < 40 && trend === 'UP') {
+                direction = 'BUY';
+                confidence = 60 + Math.min(15, (40 - rsi));
+            } else if (rsi > 70 && trend === 'DOWN') {
+                direction = 'SELL';
+                confidence = 75 + Math.min(20, (rsi - 70));
+            } else if (rsi > 60 && trend === 'DOWN') {
+                direction = 'SELL';
+                confidence = 60 + Math.min(15, (rsi - 60));
+            } else if (trend === 'UP' && rsi > 40 && rsi < 65) {
+                direction = 'BUY';
+                confidence = 55 + trendStrength;
+            } else if (trend === 'DOWN' && rsi > 35 && rsi < 60) {
+                direction = 'SELL';
+                confidence = 55 + trendStrength;
+            }
+
+            confidence = Math.min(95, Math.round(confidence));
+
+            let entry, sl, tp;
+            
+            if (direction === 'BUY') {
+                entry = currentPrice;
+                sl = currentPrice * 0.995;
+                tp = currentPrice * 1.01;
+            } else if (direction === 'SELL') {
+                entry = currentPrice;
+                sl = currentPrice * 1.005;
+                tp = currentPrice * 0.99;
+            } else {
+                entry = currentPrice;
+                sl = currentPrice * 0.99;
+                tp = currentPrice * 1.01;
+            }
+
+            const dirColor = direction === 'BUY' ? 'var(--green)' : (direction === 'SELL' ? 'var(--red)' : 'var(--gold)');
+            const trendIcon = trend === 'UP' ? '📈' : '📉';
+
+            result.innerHTML = `
+                <div class="card" style="border-color: ${dirColor};">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="font-size: 11px; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 8px;">AI SUGGESTION</div>
+                        <div style="font-size: 36px; font-weight: 900; color: ${dirColor}; letter-spacing: 3px;">${direction}</div>
+                        <div style="margin-top: 8px;">
+                            <span style="background: rgba(212,175,55,0.15); color: var(--gold); padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1px solid var(--gold);">
+                                🎯 Confidence: ${confidence}%
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="section-title" style="font-size: 13px;">📊 MARKET INDICATORS</div>
+                    
+                    <div class="detail-row">
+                        <span>Current Price</span>
+                        <span>$${currentPrice.toFixed(2)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>EMA 20</span>
+                        <span>$${ema20.toFixed(2)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>EMA 50</span>
+                        <span>$${ema50.toFixed(2)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>RSI (14)</span>
+                        <span style="color: ${rsi > 70 ? 'var(--red)' : (rsi < 30 ? 'var(--green)' : 'var(--gold-light)')};">${rsi.toFixed(1)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Trend</span>
+                        <span>${trendIcon} ${trend === 'UP' ? 'Uptrend' : 'Downtrend'}</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="section-title" style="font-size: 13px;">🎯 SUGGESTED TRADE</div>
+                    <div class="detail-row">
+                        <span>Direction</span>
+                        <span style="color: ${dirColor};">${direction}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Entry</span>
+                        <span>$${entry.toFixed(2)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Stop Loss</span>
+                        <span style="color: var(--red);">$${sl.toFixed(2)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Take Profit</span>
+                        <span style="color: var(--green);">$${tp.toFixed(2)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Risk/Reward</span>
+                        <span>1:2</span>
+                    </div>
+                </div>
+
+                <button class="btn-block success" onclick="applyAITrade('${direction}', '${entry.toFixed(2)}', '${sl.toFixed(2)}', '${tp.toFixed(2)}')" style="margin-bottom: 8px;">
+                    ✅ Apply to Signal Form
+                </button>
+                <button class="btn-block outline" onclick="runAIAnalysis()">
+                    🔄 Analyze Again
+                </button>
+            `;
+
+            result.classList.remove('hidden');
+
+        } catch (error) {
+            console.error(error);
+            empty.classList.remove('hidden');
+            empty.innerHTML = `
+                <div class="icon">⚠️</div>
+                <h3>Analysis Failed</h3>
+                <p>Could not fetch market data. Try again.</p>
+            `;
+        } finally {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            loading.classList.add('hidden');
+        }
+    }
+
+    function calculateEMA(prices, period) {
+        const k = 2 / (period + 1);
+        let ema = prices[0];
+        for (let i = 1; i < prices.length; i++) {
+            ema = prices[i] * k + ema * (1 - k);
+        }
+        return ema;
+    }
+
+    function calculateRSI(prices, period) {
+        let gains = 0, losses = 0;
+        for (let i = prices.length - period; i < prices.length; i++) {
+            const diff = prices[i] - prices[i - 1];
+            if (diff >= 0) gains += diff;
+            else losses -= diff;
+        }
+        const avgGain = gains / period;
+        const avgLoss = losses / period;
+        if (avgLoss === 0) return 100;
+        const rs = avgGain / avgLoss;
+        return 100 - (100 / (1 + rs));
+    }
+
+    function applyAITrade(direction, entry, sl, tp) {
+        document.getElementById('signalDirection').value = direction;
+        document.getElementById('signalEntry').value = entry;
+        document.getElementById('signalSL').value = sl;
+        document.getElementById('signalTP').value = tp;
+        document.getElementById('signalNotes').value = `AI suggested ${direction} based on EMA/RSI analysis`;
+        
+        showToast('✅ Trade applied to form!');
+        setTimeout(() => showScreen('sendSignalScreen'), 800);
+    }
+</script>
 </body>
 </html>
