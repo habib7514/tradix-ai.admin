@@ -1669,12 +1669,15 @@
                     </div>
                 </div>
 
-                <button class="btn-block success" onclick="applyAITrade('${direction}', '${entry.toFixed(2)}', '${sl.toFixed(2)}', '${tp.toFixed(2)}')" style="margin-bottom: 8px;">
-                    ✅ Apply to Signal Form
-                </button>
-                <button class="btn-block outline" onclick="runAIAnalysis()">
-                    🔄 Analyze Again
-                </button>
+                <button class="btn-block success" onclick="sendAISignal('${direction}', '${entry.toFixed(2)}', '${sl.toFixed(2)}', '${tp.toFixed(2)}', ${confidence})" style="margin-bottom: 8px; font-size: 16px; padding: 16px;">
+    📤 Send to All Subscribers
+</button>
+<button class="btn-block outline" onclick="applyAITrade('${direction}', '${entry.toFixed(2)}', '${sl.toFixed(2)}', '${tp.toFixed(2)}')" style="margin-bottom: 8px;">
+    📝 Edit Before Sending
+</button>
+<button class="btn-block outline" onclick="runAIAnalysis()">
+    🔄 Analyze Again
+</button>
             `;
 
             result.classList.remove('hidden');
@@ -1716,6 +1719,24 @@
         const rs = avgGain / avgLoss;
         return 100 - (100 / (1 + rs));
     }
+async function sendAISignal(direction, entry, sl, tp, confidence) {
+    if (!db) { showToast('Please wait...'); return; }
+    const confirmed = confirm(`📤 Send to all subscribers?\n\n${direction} @ $${entry}\nSL: $${sl}\nTP: $${tp}\nConfidence: ${confidence}%`);
+    if (!confirmed) return;
+    try {
+        showToast('Sending...');
+        await addDoc(collection(db, 'signals'), {
+            pair: 'XAU/USD', direction: direction, entry: entry,
+            stopLoss: sl, takeProfit: tp, confidence: confidence,
+            notes: `AI ${direction} signal`, status: 'active', source: 'AI',
+            createdAt: serverTimestamp()
+        });
+        showToast('✅ Signal sent!');
+    } catch (error) {
+        console.error(error);
+        showToast('Error sending signal');
+    }
+}
 
     function applyAITrade(direction, entry, sl, tp) {
         document.getElementById('signalDirection').value = direction;
