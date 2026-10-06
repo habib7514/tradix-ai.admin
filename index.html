@@ -1772,4 +1772,59 @@ async function sendAISignal(direction, entry, sl, tp, confidence) {
     🤖
 </button>
 </body>
+ <script>
+window.sendAISignal = async function(direction, entry, sl, tp, confidence) {
+    const newDirection = prompt('Direction (BUY/SELL):', direction);
+    if (!newDirection) return;
+    const newEntry = prompt('Entry Price:', entry);
+    if (!newEntry) return;
+    const newSL = prompt('Stop Loss:', sl);
+    if (!newSL) return;
+    const newTP = prompt('Take Profit:', tp);
+    if (!newTP) return;
+    
+    const sendTo = prompt('Send to:\n- ALL for everyone\n- Enter email for specific user', 'ALL');
+    if (!sendTo) return;
+    
+    try {
+        const fsModule = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");
+        const { collection, addDoc, serverTimestamp, query, where, getDocs } = fsModule;
+        
+        let targetUID = '';
+        let notes = `AI ${newDirection} signal`;
+        
+        if (sendTo.toUpperCase() !== 'ALL') {
+            const usersRef = collection(window.firebaseDB, 'users');
+            const q = query(usersRef, where('email', '==', sendTo.trim()));
+            const snap = await getDocs(q);
+            if (snap.empty) {
+                showToast('❌ User not found: ' + sendTo);
+                return;
+            }
+            snap.forEach(doc => { targetUID = doc.id; });
+            notes += ` (Private)`;
+        }
+        
+        await addDoc(collection(window.firebaseDB, 'signals'), {
+            pair: 'XAU/USD',
+            direction: newDirection.toUpperCase(),
+            entry: newEntry,
+            stopLoss: newSL,
+            takeProfit: newTP,
+            confidence: confidence,
+            notes: notes,
+            status: 'active',
+            source: 'AI-Manual',
+            targetUID: targetUID,
+            createdAt: serverTimestamp()
+        });
+        
+        showToast('✅ Signal sent successfully!');
+    } catch (error) {
+        console.error(error);
+        showToast('Error: ' + error.message);
+    }
+};
+</script>
+    </body>
 </html>
