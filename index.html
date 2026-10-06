@@ -1721,6 +1721,7 @@
     }
 async function sendAISignal(direction, entry, sl, tp, confidence) {
     if (!db) { showToast('Please wait...'); return; }
+    if (direction === 'WAIT') { direction = 'BUY'; }
     const confirmed = confirm(`📤 Send to all subscribers?\n\n${direction} @ $${entry}\nSL: $${sl}\nTP: $${tp}\nConfidence: ${confidence}%`);
     if (!confirmed) return;
     try {
