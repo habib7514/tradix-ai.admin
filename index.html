@@ -1374,7 +1374,7 @@
 
         try {
             const start = new Date(startDate);
-            const days = plan === 'Monthly' ? 30 : 90;
+            const days = plan === 'Weekly' ? 7 : (plan === 'Monthly' ? 30 : 90);
             const expiry = new Date(start.getTime() + days * 24 * 60 * 60 * 1000);
 
             await updateDoc(doc(db, 'users', currentUserUID), {
