@@ -565,7 +565,45 @@
         .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
         .empty-state h3 { color: var(--gold); margin-bottom: 6px; }
         .empty-state p { font-size: 13px; }
+
+        /* ⭐ NEW: CLOSE X BUTTON IN NOTIFICATIONS MODAL */
+        .notif-close-top {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1.5px solid rgba(212, 175, 55, 0.6);
+            color: #d4af37;
+            font-size: 18px;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: rgba(212, 175, 55, 0.3);
+            -webkit-appearance: none;
+            appearance: none;
+            transition: all 0.15s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(212, 175, 55, 0.08);
+        }
+        .notif-close-top:active {
+            background: #d4af37;
+            color: #000;
+            transform: scale(0.9);
+            box-shadow: 0 0 18px rgba(212, 175, 55, 0.6);
+        }
     </style>
+    <style>
+.bottom-nav { z-index: 999999 !important; pointer-events: auto !important; }
+.bottom-nav .nav-item { padding: 12px 8px 14px 8px !important; min-height: 65px !important; width: 25% !important; pointer-events: auto !important; cursor: pointer !important; touch-action: manipulation !important; -webkit-tap-highlight-color: rgba(212, 175, 55, 0.3) !important; user-select: none !important; -webkit-user-select: none !important; position: relative !important; z-index: 10 !important; }
+.bottom-nav .nav-item .icon, .bottom-nav .nav-item span { pointer-events: none !important; }
+.bottom-nav .nav-item:active { transform: scale(0.95) !important; background: rgba(212, 175, 55, 0.1) !important; }
+</style>
 </head>
 <body>
   
@@ -929,6 +967,61 @@
     </div>
 </div>
 
+<!-- ================= AI ANALYSIS SCREEN ================= -->
+<div id="aiAnalysisScreen" class="screen">
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo">A</div>
+            <div class="header-title">
+                <h1>AI ANALYSIS</h1>
+                <span>● MARKET SCANNER</span>
+            </div>
+        </div>
+        <div class="bell-icon">🤖</div>
+    </div>
+
+    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px; line-height: 1.6;">
+        Analyze live gold market data with AI-powered indicators (EMA, RSI, Trend) and get a suggested trade.
+    </p>
+
+    <button class="btn-block" onclick="runAIAnalysis()" id="aiAnalyzeBtn" style="margin-bottom: 20px;">
+        🤖 Analyze Market Now
+    </button>
+
+    <div id="aiLoading" class="hidden" style="text-align: center; padding: 30px;">
+        <div style="font-size: 40px; margin-bottom: 12px;">⏳</div>
+        <p style="color: var(--gold); font-weight: 700;">Analyzing live market data...</p>
+        <p style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">Fetching candles, calculating indicators...</p>
+    </div>
+
+    <div id="aiResult" class="hidden"></div>
+
+    <div id="aiEmpty" class="empty-state">
+        <div class="icon">🤖</div>
+        <h3>Ready to Analyze</h3>
+        <p>Press the button above to get an AI trade suggestion.</p>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-item" onclick="showScreen('dashboardScreen')">
+            <span class="icon">📊</span>
+            <span>Dashboard</span>
+        </button>
+        <button class="nav-item" onclick="showScreen('usersScreen')">
+            <span class="icon">👥</span>
+            <span>Users</span>
+        </button>
+        <button class="nav-item active" onclick="showScreen('aiAnalysisScreen')">
+            <span class="icon">🤖</span>
+            <span>AI</span>
+        </button>
+        <button class="nav-item" onclick="showScreen('sendSignalScreen')">
+            <span class="icon">📤</span>
+            <span>Signal</span>
+        </button>
+    </div>
+</div>
+
 <!-- ================= ACTIVATE MODAL ================= -->
 <div id="activateModal" class="screen" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 99998; display: none; align-items: center; justify-content: center; padding: 20px;">
     <div style="background: #141414; border: 1px solid #d4af37; border-radius: 16px; padding: 24px; width: 100%; max-width: 400px;">
@@ -957,6 +1050,28 @@
     </div>
 </div>
 
+<!-- ================= FLOATING AI BUTTON ================= -->
+<button id="floatingAI" onclick="showScreen('aiAnalysisScreen')" style="
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d4af37, #f4d03f);
+    border: 2px solid #000;
+    color: #000;
+    font-size: 28px;
+    cursor: pointer;
+    z-index: 9998;
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+">
+    🤖
+</button>
+
 <!-- ================= TOAST ================= -->
 <div id="toast" class="toast">Message</div>
 
@@ -983,7 +1098,6 @@
     setTimeout(() => {
         document.getElementById('splash').classList.add('hide');
         setTimeout(() => {
-            // التحقق من وجود مستخدم مسجل
             const savedAdmin = localStorage.getItem('tradix_admin');
             if (savedAdmin) {
                 showScreen('dashboardScreen');
@@ -1113,7 +1227,6 @@
                 });
             });
 
-            // إحصائيات
             const total = allUsers.length;
             const active = allUsers.filter(u => u.status === 'active').length;
             const pending = allUsers.filter(u => u.status === 'pending').length;
@@ -1124,7 +1237,6 @@
             document.getElementById('statPendingUsers').textContent = pending;
             document.getElementById('statInactiveUsers').textContent = inactive;
 
-            // النشاط الأخير (آخر 3 مسجلين)
             const recent = allUsers
                 .sort((a, b) => {
                     const aTime = a.createdAt?.seconds || 0;
@@ -1189,7 +1301,6 @@
     function filterByStatus(status) {
         currentFilter = status;
         
-        // تحديث أزرار الفلتر
         document.querySelectorAll('#usersScreen .btn-small').forEach(b => b.style.opacity = '0.5');
         if (status === 'all') document.getElementById('filterAll').style.opacity = '1';
         if (status === 'active') document.getElementById('filterActive').style.opacity = '1';
@@ -1213,7 +1324,6 @@
             return true;
         });
 
-        // ترتيب حسب الأحدث
         filtered.sort((a, b) => {
             const aTime = a.createdAt?.seconds || 0;
             const bTime = b.createdAt?.seconds || 0;
@@ -1287,12 +1397,10 @@
 
             const u = { uid: uid, ...userDoc.data() };
 
-            // ملء البيانات
             document.getElementById('detailName').textContent = u.name || '-';
             document.getElementById('detailEmail').textContent = u.email || '-';
             document.getElementById('detailUID').textContent = uid.substring(0, 20) + '...';
             
-            // تاريخ التسجيل
             if (u.createdAt?.seconds) {
                 const date = new Date(u.createdAt.seconds * 1000);
                 document.getElementById('detailCreated').textContent = date.toLocaleDateString('en-GB');
@@ -1300,13 +1408,11 @@
                 document.getElementById('detailCreated').textContent = '-';
             }
 
-            // الاشتراك
             document.getElementById('detailStatus').textContent = (u.status || 'inactive').toUpperCase();
             document.getElementById('detailPlan').textContent = u.plan || 'No Active Plan';
             document.getElementById('detailStart').textContent = u.startDate || '-';
             document.getElementById('detailExpiry').textContent = u.expiryDate || '-';
 
-            // الأيام المتبقية
             const daysLeft = calculateDaysLeft(u.expiryDate);
             const daysEl = document.getElementById('detailDaysLeft');
             if (daysLeft !== null) {
@@ -1322,7 +1428,6 @@
                 daysEl.style.color = 'var(--text-muted)';
             }
 
-            // معلومات الإيداع
             const depositCard = document.getElementById('depositInfoCard');
             if (u.txHash) {
                 depositCard.classList.remove('hidden');
@@ -1332,7 +1437,6 @@
                 depositCard.classList.add('hidden');
             }
 
-            // إظهار/إخفاء زر التفعيل
             const activateBtn = document.getElementById('activateBtn');
             if (u.status === 'active') {
                 activateBtn.textContent = '🔄 Renew Subscription';
@@ -1352,7 +1456,6 @@
         const modal = document.getElementById('activateModal');
         modal.style.display = 'flex';
         
-        // تاريخ اليوم افتراضياً
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('activateStartDate').value = today;
     }
@@ -1435,7 +1538,6 @@
         try {
             showToast('Sending signal...');
 
-            // حفظ الصفقة في Firestore
             await addDoc(collection(db, 'signals'), {
                 pair: 'XAU/USD',
                 direction: direction,
@@ -1449,7 +1551,6 @@
 
             showToast('✅ Signal sent to all subscribers!');
             
-            // تفريغ الحقول
             document.getElementById('signalEntry').value = '';
             document.getElementById('signalSL').value = '';
             document.getElementById('signalTP').value = '';
@@ -1475,61 +1576,6 @@
         setInterval(hideNetlifyBadge, 500);
     });
 </script>
-
-<!-- ================= AI ANALYSIS SCREEN ================= -->
-<div id="aiAnalysisScreen" class="screen">
-    <div class="header">
-        <div class="header-left">
-            <div class="header-logo">A</div>
-            <div class="header-title">
-                <h1>AI ANALYSIS</h1>
-                <span>● MARKET SCANNER</span>
-            </div>
-        </div>
-        <div class="bell-icon">🤖</div>
-    </div>
-
-    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px; line-height: 1.6;">
-        Analyze live gold market data with AI-powered indicators (EMA, RSI, Trend) and get a suggested trade.
-    </p>
-
-    <button class="btn-block" onclick="runAIAnalysis()" id="aiAnalyzeBtn" style="margin-bottom: 20px;">
-        🤖 Analyze Market Now
-    </button>
-
-    <div id="aiLoading" class="hidden" style="text-align: center; padding: 30px;">
-        <div style="font-size: 40px; margin-bottom: 12px;">⏳</div>
-        <p style="color: var(--gold); font-weight: 700;">Analyzing live market data...</p>
-        <p style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">Fetching candles, calculating indicators...</p>
-    </div>
-
-    <div id="aiResult" class="hidden"></div>
-
-    <div id="aiEmpty" class="empty-state">
-        <div class="icon">🤖</div>
-        <h3>Ready to Analyze</h3>
-        <p>Press the button above to get an AI trade suggestion.</p>
-    </div>
-
-    <div class="bottom-nav">
-        <button class="nav-item" onclick="showScreen('dashboardScreen')">
-            <span class="icon">📊</span>
-            <span>Dashboard</span>
-        </button>
-        <button class="nav-item" onclick="showScreen('usersScreen')">
-            <span class="icon">👥</span>
-            <span>Users</span>
-        </button>
-        <button class="nav-item active" onclick="showScreen('aiAnalysisScreen')">
-            <span class="icon">🤖</span>
-            <span>AI</span>
-        </button>
-        <button class="nav-item" onclick="showScreen('sendSignalScreen')">
-            <span class="icon">📤</span>
-            <span>Signal</span>
-        </button>
-    </div>
-</div>
 
 <!-- ================= AI LOGIC ================= -->
 <script>
@@ -1720,25 +1766,26 @@
         const rs = avgGain / avgLoss;
         return 100 - (100 / (1 + rs));
     }
-async function sendAISignal(direction, entry, sl, tp, confidence) {
-    if (!db) { showToast('Please wait...'); return; }
-    if (direction === 'WAIT') { direction = 'BUY'; }
-    const confirmed = confirm(`📤 Send to all subscribers?\n\n${direction} @ $${entry}\nSL: $${sl}\nTP: $${tp}\nConfidence: ${confidence}%`);
-    if (!confirmed) return;
-    try {
-        showToast('Sending...');
-        await addDoc(collection(db, 'signals'), {
-            pair: 'XAU/USD', direction: direction, entry: entry,
-            stopLoss: sl, takeProfit: tp, confidence: confidence,
-            notes: `AI ${direction} signal`, status: 'active', source: 'AI',
-            createdAt: serverTimestamp()
-        });
-        showToast('✅ Signal sent!');
-    } catch (error) {
-        console.error(error);
-        showToast('Error sending signal');
+
+    async function sendAISignal(direction, entry, sl, tp, confidence) {
+        if (!db) { showToast('Please wait...'); return; }
+        if (direction === 'WAIT') { direction = 'BUY'; }
+        const confirmed = confirm(`📤 Send to all subscribers?\n\n${direction} @ $${entry}\nSL: $${sl}\nTP: $${tp}\nConfidence: ${confidence}%`);
+        if (!confirmed) return;
+        try {
+            showToast('Sending...');
+            await addDoc(collection(db, 'signals'), {
+                pair: 'XAU/USD', direction: direction, entry: entry,
+                stopLoss: sl, takeProfit: tp, confidence: confidence,
+                notes: `AI ${direction} signal`, status: 'active', source: 'AI',
+                createdAt: serverTimestamp()
+            });
+            showToast('✅ Signal sent!');
+        } catch (error) {
+            console.error(error);
+            showToast('Error sending signal');
+        }
     }
-}
 
     function applyAITrade(direction, entry, sl, tp) {
         document.getElementById('signalDirection').value = direction;
@@ -1750,89 +1797,223 @@ async function sendAISignal(direction, entry, sl, tp, confidence) {
         showToast('✅ Trade applied to form!');
         setTimeout(() => showScreen('sendSignalScreen'), 800);
     }
-</script>
-    
-<button id="floatingAI" onclick="showScreen('aiAnalysisScreen')" style="
-    position: fixed;
-    bottom: 90px;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #d4af37, #f4d03f);
-    border: 2px solid #000;
-    color: #000;
-    font-size: 28px;
-    cursor: pointer;
-    z-index: 9998;
-    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-">
-    🤖
-</button>
- <script>
-window.sendAISignal = async function(direction, entry, sl, tp, confidence) {
-    const newDirection = prompt('Direction (BUY/SELL):', direction);
-    if (!newDirection) return;
-    const newEntry = prompt('Entry Price:', entry);
-    if (!newEntry) return;
-    const newSL = prompt('Stop Loss:', sl);
-    if (!newSL) return;
-    const newTP = prompt('Take Profit:', tp);
-    if (!newTP) return;
-    
-    const sendTo = prompt('Send to:\n- ALL for everyone\n- Enter email for specific user', 'ALL');
-    if (!sendTo) return;
-    
-    try {
-        const fsModule = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");
-        const { collection, addDoc, serverTimestamp, query, where, getDocs } = fsModule;
+
+    // ===== SEND SIGNAL BY EMAIL (Manual) =====
+    window.sendAISignal = async function(direction, entry, sl, tp, confidence) {
+        const newDirection = prompt('Direction (BUY/SELL):', direction);
+        if (!newDirection) return;
+        const newEntry = prompt('Entry Price:', entry);
+        if (!newEntry) return;
+        const newSL = prompt('Stop Loss:', sl);
+        if (!newSL) return;
+        const newTP = prompt('Take Profit:', tp);
+        if (!newTP) return;
         
-        let targetUID = '';
-        let notes = `AI ${newDirection} signal`;
+        const sendTo = prompt('Send to:\n- ALL for everyone\n- Enter email for specific user', 'ALL');
+        if (!sendTo) return;
         
-        if (sendTo.toUpperCase() !== 'ALL') {
-            const usersRef = collection(window.firebaseDB, 'users');
-            const q = query(usersRef, where('email', '==', sendTo.trim()));
-            const snap = await getDocs(q);
-            if (snap.empty) {
-                showToast('❌ User not found: ' + sendTo);
-                return;
+        try {
+            const fsModule = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");
+            const { collection, addDoc, serverTimestamp, query, where, getDocs } = fsModule;
+            
+            let targetUID = '';
+            let notes = `AI ${newDirection} signal`;
+            
+            if (sendTo.toUpperCase() !== 'ALL') {
+                const usersRef = collection(window.firebaseDB, 'users');
+                const q = query(usersRef, where('email', '==', sendTo.trim()));
+                const snap = await getDocs(q);
+                if (snap.empty) {
+                    showToast('❌ User not found: ' + sendTo);
+                    return;
+                }
+                snap.forEach(doc => { targetUID = doc.id; });
+                notes += ` (Private)`;
             }
-            snap.forEach(doc => { targetUID = doc.id; });
-            notes += ` (Private)`;
+            
+            await addDoc(collection(window.firebaseDB, 'signals'), {
+                pair: 'XAU/USD',
+                direction: newDirection.toUpperCase(),
+                entry: newEntry,
+                stopLoss: newSL,
+                takeProfit: newTP,
+                confidence: confidence,
+                notes: notes,
+                status: 'active',
+                source: 'AI-Manual',
+                targetUID: targetUID,
+                createdAt: serverTimestamp()
+            });
+            
+            showToast('✅ Signal sent successfully!');
+        } catch (error) {
+            console.error(error);
+            showToast('Error: ' + error.message);
         }
-        
-        await addDoc(collection(window.firebaseDB, 'signals'), {
-            pair: 'XAU/USD',
-            direction: newDirection.toUpperCase(),
-            entry: newEntry,
-            stopLoss: newSL,
-            takeProfit: newTP,
-            confidence: confidence,
-            notes: notes,
-            status: 'active',
-            source: 'AI-Manual',
-            targetUID: targetUID,
-            createdAt: serverTimestamp()
-        });
-        
-        showToast('✅ Signal sent successfully!');
-    } catch (error) {
-        console.error(error);
-        showToast('Error: ' + error.message);
+    };
+
+    // ===== CLEAR ALL SIGNALS =====
+    async function clearAllSignals() {
+        if (!confirm('Delete current signal from ALL subscribers?')) return;
+        try {
+            const m = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");
+            const { collection, getDocs, deleteDoc, doc } = m;
+            const s = await getDocs(collection(window.firebaseDB, 'signals'));
+            let c = 0;
+            for (const d of s.docs) {
+                await deleteDoc(doc(window.firebaseDB, 'signals', d.id));
+                c++;
+            }
+            showToast('✅ Deleted ' + c + ' signal(s)');
+        } catch (e) {
+            console.error(e);
+            showToast('Error');
+        }
     }
-};
+
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const b = document.querySelector('.btn-block.outline');
+            if (b) {
+                const btn = document.createElement('button');
+                btn.className = 'btn-block';
+                btn.style.background = '#ef4444';
+                btn.style.color = '#fff';
+                btn.style.marginBottom = '8px';
+                btn.textContent = '🗑️ Delete Current Signal';
+                btn.onclick = clearAllSignals;
+                b.parentNode.insertBefore(btn, b);
+            }
+        }, 2000);
+    });
 </script>
-    <script>async function clearAllSignals(){if(!confirm('Delete current signal from ALL subscribers?'))return;try{const m=await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");const{collection,getDocs,deleteDoc,doc}=m;const s=await getDocs(collection(window.firebaseDB,'signals'));let c=0;for(const d of s.docs){await deleteDoc(doc(window.firebaseDB,'signals',d.id));c++;}showToast('✅ Deleted '+c+' signal(s)');}catch(e){console.error(e);showToast('Error');}}window.addEventListener('load',()=>{setTimeout(()=>{const b=document.querySelector('.btn-block.outline');if(b){const btn=document.createElement('button');btn.className='btn-block';btn.style.background='#ef4444';btn.style.color='#fff';btn.style.marginBottom='8px';btn.textContent='🗑️ Delete Current Signal';btn.onclick=clearAllSignals;b.parentNode.insertBefore(btn,b);}},2000);});</script>
-    <script>let adminNotifs=JSON.parse(localStorage.getItem('adminNotifs')||'[]');let seenUsers=JSON.parse(localStorage.getItem('seenUsers3')||'[]');let seenHashes=JSON.parse(localStorage.getItem('seenHashes3')||'[]');function saveNotifs(){localStorage.setItem('adminNotifs',JSON.stringify(adminNotifs));localStorage.setItem('seenUsers3',JSON.stringify(seenUsers));localStorage.setItem('seenHashes3',JSON.stringify(seenHashes));updateBadge();}function updateBadge(){const unread=adminNotifs.filter(n=>!n.read).length;const bell=document.querySelector('.bell-icon');if(!bell)return;let b=bell.querySelector('.notifBadge');if(unread>0){if(!b){b=document.createElement('span');b.className='notifBadge';b.style.cssText='position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;z-index:10;';bell.style.position='relative';bell.appendChild(b);}b.textContent=unread;}else if(b)b.remove();}function addNotif(msg){adminNotifs.unshift({id:Date.now(),message:msg,time:new Date().toLocaleString('en-GB'),read:false});if(adminNotifs.length>50)adminNotifs=adminNotifs.slice(0,50);saveNotifs();if(Notification.permission==='granted'){try{new Notification('TRADIX AI Admin',{body:msg});}catch(e){}}try{const c=new(window.AudioContext||window.webkitAudioContext)();[0,0.3].forEach(d=>{const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.setValueAtTime(0.3,c.currentTime+d);g.gain.exponentialRampToValueAtTime(0.01,c.currentTime+d+0.2);o.start(c.currentTime+d);o.stop(c.currentTime+d+0.2);});}catch(e){}if(navigator.vibrate)navigator.vibrate([200,100,200]);}function openNotifModal(){let m=document.getElementById('notifModal');if(!m){m=document.createElement('div');m.id='notifModal';m.style.cssText='display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99999;padding:16px;overflow-y:auto;';m.innerHTML='<div style="background:#141414;border:1px solid #d4af37;border-radius:16px;padding:20px;max-width:420px;margin:40px auto;"><h3 style="color:#d4af37;margin-bottom:16px;text-align:center;font-family:Tajawal,sans-serif;">🔔 Notifications</h3><div id="notifList" style="font-family:Tajawal,sans-serif;"></div><button onclick="closeNotifModal()" style="width:100%;padding:14px;border-radius:12px;border:1px solid #444;background:transparent;color:#fff;margin-top:12px;font-family:Tajawal,sans-serif;font-weight:700;cursor:pointer;">Close</button></div>';document.body.appendChild(m);}const list=document.getElementById('notifList');if(adminNotifs.length===0){list.innerHTML='<p style="color:#888;text-align:center;padding:20px;">No notifications yet</p>';}else{list.innerHTML=adminNotifs.map(n=>'<div style="background:#0d0d0d;border-radius:10px;padding:12px;margin-bottom:8px;border-left:3px solid '+(n.read?'#333':'#d4af37')+';"><div style="color:#f4d03f;font-weight:700;font-size:13px;margin-bottom:4px;">'+n.message+'</div><div style="color:#666;font-size:11px;">'+n.time+'</div></div>').join('');}m.style.display='block';adminNotifs.forEach(n=>n.read=true);saveNotifs();}function closeNotifModal(){const m=document.getElementById('notifModal');if(m)m.style.display='none';}async function initAdminNotif(){if(!window.firebaseDB){setTimeout(initAdminNotif,1000);return;}try{const m=await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");const{collection,onSnapshot,getDocs}=m;if(seenUsers.length===0){const snap=await getDocs(collection(window.firebaseDB,'users'));snap.forEach(d=>{seenUsers.push(d.id);const data=d.data();if(data.txHash&&data.status!=='pending')seenHashes.push(d.id+'_'+data.txHash);});saveNotifs();}onSnapshot(collection(window.firebaseDB,'users'),s=>{s.docChanges().forEach(c=>{const uid=c.doc.id;const d=c.doc.data();if(c.type==='added'&&!seenUsers.includes(uid)){seenUsers.push(uid);saveNotifs();addNotif('👤 New user: '+(d.name||d.email));}if(d.txHash){const key=uid+'_'+d.txHash;if(!seenHashes.includes(key)){seenHashes.push(key);saveNotifs();addNotif('💰 Deposit: '+(d.name||d.email)+' - $'+(d.depositAmount||'?'));}}});});}catch(e){console.error(e);}}setTimeout(initAdminNotif,3000);</script>
-    <style>
-.bottom-nav { z-index: 999999 !important; pointer-events: auto !important; }
-.bottom-nav .nav-item { padding: 12px 8px 14px 8px !important; min-height: 65px !important; width: 25% !important; pointer-events: auto !important; cursor: pointer !important; touch-action: manipulation !important; -webkit-tap-highlight-color: rgba(212, 175, 55, 0.3) !important; user-select: none !important; -webkit-user-select: none !important; position: relative !important; z-index: 10 !important; }
-.bottom-nav .nav-item .icon, .bottom-nav .nav-item span { pointer-events: none !important; }
-.bottom-nav .nav-item:active { transform: scale(0.95) !important; background: rgba(212, 175, 55, 0.1) !important; }
-</style>
-    </body>
+
+<!-- ================= ADMIN NOTIFICATIONS (مع زر X جديد) ================= -->
+<script>
+let adminNotifs = JSON.parse(localStorage.getItem('adminNotifs') || '[]');
+let seenUsers = JSON.parse(localStorage.getItem('seenUsers3') || '[]');
+let seenHashes = JSON.parse(localStorage.getItem('seenHashes3') || '[]');
+
+function saveNotifs() {
+    localStorage.setItem('adminNotifs', JSON.stringify(adminNotifs));
+    localStorage.setItem('seenUsers3', JSON.stringify(seenUsers));
+    localStorage.setItem('seenHashes3', JSON.stringify(seenHashes));
+    updateBadge();
+}
+
+function updateBadge() {
+    const unread = adminNotifs.filter(n => !n.read).length;
+    const bell = document.querySelector('.bell-icon');
+    if (!bell) return;
+    let b = bell.querySelector('.notifBadge');
+    if (unread > 0) {
+        if (!b) {
+            b = document.createElement('span');
+            b.className = 'notifBadge';
+            b.style.cssText = 'position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;z-index:10;';
+            bell.style.position = 'relative';
+            bell.appendChild(b);
+        }
+        b.textContent = unread;
+    } else if (b) b.remove();
+}
+
+function addNotif(msg) {
+    adminNotifs.unshift({
+        id: Date.now(),
+        message: msg,
+        time: new Date().toLocaleString('en-GB'),
+        read: false
+    });
+    if (adminNotifs.length > 50) adminNotifs = adminNotifs.slice(0, 50);
+    saveNotifs();
+    if (Notification.permission === 'granted') {
+        try { new Notification('TRADIX AI Admin', { body: msg }); } catch(e) {}
+    }
+    try {
+        const c = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.3].forEach(d => {
+            const o = c.createOscillator();
+            const g = c.createGain();
+            o.connect(g); g.connect(c.destination);
+            o.frequency.value = 880;
+            g.gain.setValueAtTime(0.3, c.currentTime + d);
+            g.gain.exponentialRampToValueAtTime(0.01, c.currentTime + d + 0.2);
+            o.start(c.currentTime + d); o.stop(c.currentTime + d + 0.2);
+        });
+    } catch(e) {}
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+}
+
+function openNotifModal() {
+    let m = document.getElementById('notifModal');
+    if (!m) {
+        m = document.createElement('div');
+        m.id = 'notifModal';
+        m.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:99999;padding:16px;overflow-y:auto;';
+        m.innerHTML = '<div style="background:#141414;border:1px solid #d4af37;border-radius:16px;padding:20px;max-width:420px;margin:40px auto;position:relative;"><button class="notif-close-top" onclick="closeNotifModal()" aria-label="Close">✕</button><h3 style="color:#d4af37;margin-bottom:16px;text-align:center;padding-right:40px;padding-left:40px;font-family:Tajawal,sans-serif;">🔔 Notifications</h3><div id="notifList" style="font-family:Tajawal,sans-serif;"></div><button onclick="closeNotifModal()" style="width:100%;padding:14px;border-radius:12px;border:1px solid #444;background:transparent;color:#fff;margin-top:12px;font-family:Tajawal,sans-serif;font-weight:700;cursor:pointer;touch-action:manipulation;">Close</button></div>';
+        document.body.appendChild(m);
+    }
+    const list = document.getElementById('notifList');
+    if (adminNotifs.length === 0) {
+        list.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">No notifications yet</p>';
+    } else {
+        list.innerHTML = adminNotifs.map(n =>
+            '<div style="background:#0d0d0d;border-radius:10px;padding:12px;margin-bottom:8px;border-left:3px solid ' + (n.read ? '#333' : '#d4af37') + ';"><div style="color:#f4d03f;font-weight:700;font-size:13px;margin-bottom:4px;">' + n.message + '</div><div style="color:#666;font-size:11px;">' + n.time + '</div></div>'
+        ).join('');
+    }
+    m.style.display = 'block';
+    adminNotifs.forEach(n => n.read = true);
+    saveNotifs();
+}
+
+function closeNotifModal() {
+    const m = document.getElementById('notifModal');
+    if (m) m.style.display = 'none';
+}
+
+async function initAdminNotif() {
+    if (!window.firebaseDB) {
+        setTimeout(initAdminNotif, 1000);
+        return;
+    }
+    try {
+        const m = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");
+        const { collection, onSnapshot, getDocs } = m;
+        if (seenUsers.length === 0) {
+            const snap = await getDocs(collection(window.firebaseDB, 'users'));
+            snap.forEach(d => {
+                seenUsers.push(d.id);
+                const data = d.data();
+                if (data.txHash && data.status !== 'pending') seenHashes.push(d.id + '_' + data.txHash);
+            });
+            saveNotifs();
+        }
+        onSnapshot(collection(window.firebaseDB, 'users'), s => {
+            s.docChanges().forEach(c => {
+                const uid = c.doc.id;
+                const d = c.doc.data();
+                if (c.type === 'added' && !seenUsers.includes(uid)) {
+                    seenUsers.push(uid);
+                    saveNotifs();
+                    addNotif('👤 New user: ' + (d.name || d.email));
+                }
+                if (d.txHash) {
+                    const key = uid + '_' + d.txHash;
+                    if (!seenHashes.includes(key)) {
+                        seenHashes.push(key);
+                        saveNotifs();
+                        addNotif('💰 Deposit: ' + (d.name || d.email) + ' - $' + (d.depositAmount || '?'));
+                    }
+                }
+            });
+        });
+    } catch(e) {
+        console.error(e);
+    }
+}
+setTimeout(initAdminNotif, 3000);
+</script>
+
+</body>
 </html>
