@@ -1563,7 +1563,7 @@
         }
     }
 
-    // ===== SEND SIGNAL (تم إصلاحها بالكامل) =====
+    // ===== SEND SIGNAL (تم تحديثها لإرسال أسماء بديلة) =====
     async function sendSignal() {
         const direction = document.getElementById('signalDirection').value;
         const entry = document.getElementById('signalEntry').value.trim();
@@ -1579,25 +1579,32 @@
         try {
             showToast('Sending signal...');
 
-            // التأكد من أن Firebase جاهز لتجنب الفشل الصامت
             if (!window.firebaseDB) {
                 throw new Error("Firebase is not ready yet. Please wait a moment.");
             }
 
-            // استدعاء دوال Firebase مباشرة لضمان عملها
             const fsModule = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");
             const { collection, addDoc, serverTimestamp } = fsModule;
 
             await addDoc(collection(window.firebaseDB, 'signals'), {
                 pair: 'XAU/USD',
                 direction: direction.toUpperCase(),
+                
+                // الأسماء الافتراضية
                 entry: entry,
                 stopLoss: sl,
                 takeProfit: tp,
+                
+                // أسماء بديلة لضمان قراءة المشترك لها
+                entryPrice: entry,
+                sl: sl,
+                tp: tp,
+                price: entry,
+
                 notes: notes,
                 status: 'active',
                 source: 'Admin',
-                targetUID: '', // مهم جداً: حقل فارغ يعني أن الإشارة موجهة للجميع
+                targetUID: '', 
                 createdAt: serverTimestamp()
             });
 
@@ -1610,7 +1617,6 @@
 
         } catch (error) {
             console.error("Signal Error:", error);
-            // إظهار الخطأ الحقيقي على الشاشة بدلاً من رسالة عامة
             showToast('❌ Error: ' + error.message);
         }
     }
@@ -1836,14 +1842,23 @@
             await addDoc(collection(window.firebaseDB, 'signals'), {
                 pair: 'XAU/USD',
                 direction: direction.toUpperCase(),
+                
+                // الأسماء الافتراضية
                 entry: entry,
                 stopLoss: sl,
                 takeProfit: tp,
+                
+                // أسماء بديلة
+                entryPrice: entry,
+                sl: sl,
+                tp: tp,
+                price: entry,
+
                 confidence: confidence,
                 notes: `AI ${direction} signal`,
                 status: 'active',
                 source: 'AI',
-                targetUID: '', // إرسال للجميع
+                targetUID: '', 
                 createdAt: serverTimestamp()
             });
             
