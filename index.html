@@ -1563,7 +1563,7 @@
         }
     }
 
-    // ===== SEND SIGNAL (تم تحديثها لإرسال أسماء بديلة) =====
+    // ===== SEND SIGNAL (تم تحديثها لإرسال كافة الأسماء المحتملة) =====
     async function sendSignal() {
         const direction = document.getElementById('signalDirection').value;
         const entry = document.getElementById('signalEntry').value.trim();
@@ -1636,8 +1636,10 @@
     });
 </script>
 
-<!-- ================= AI LOGIC ================= -->
+<!-- ================= AI LOGIC (تم الإصلاح الجذري هنا) ================= -->
 <script>
+    let currentAITrade = null; // متغير عام لتخزين بيانات الصفقة بأمان
+
     async function runAIAnalysis() {
         const btn = document.getElementById('aiAnalyzeBtn');
         const loading = document.getElementById('aiLoading');
@@ -1712,6 +1714,15 @@
                 tp = currentPrice * 1.01;
             }
 
+            // تخزين البيانات في المتغير العام
+            currentAITrade = {
+                direction: direction,
+                entry: entry.toFixed(2),
+                sl: sl.toFixed(2),
+                tp: tp.toFixed(2),
+                confidence: confidence
+            };
+
             const dirColor = direction === 'BUY' ? 'var(--green)' : (direction === 'SELL' ? 'var(--red)' : 'var(--gold)');
             const trendIcon = trend === 'UP' ? '📈' : '📉';
 
@@ -1775,15 +1786,16 @@
                     </div>
                 </div>
 
-                <button class="btn-block success" onclick="sendAISignal('${direction}', '${entry.toFixed(2)}', '${sl.toFixed(2)}', '${tp.toFixed(2)}', ${confidence})" style="margin-bottom: 8px; font-size: 16px; padding: 16px;">
-    📤 Send to All Subscribers
-</button>
-<button class="btn-block outline" onclick="applyAITrade('${direction}', '${entry.toFixed(2)}', '${sl.toFixed(2)}', '${tp.toFixed(2)}')" style="margin-bottom: 8px;">
-    📝 Edit Before Sending
-</button>
-<button class="btn-block outline" onclick="runAIAnalysis()">
-    🔄 Analyze Again
-</button>
+                <!-- الزر الآن لا يمرر أي متغيرات، بل يقرأ من المتغير العام -->
+                <button class="btn-block success" onclick="sendAISignal()" style="margin-bottom: 8px; font-size: 16px; padding: 16px;">
+                    📤 Send to All Subscribers
+                </button>
+                <button class="btn-block outline" onclick="applyAITrade()" style="margin-bottom: 8px;">
+                    📝 Edit Before Sending
+                </button>
+                <button class="btn-block outline" onclick="runAIAnalysis()">
+                    🔄 Analyze Again
+                </button>
             `;
 
             result.classList.remove('hidden');
@@ -1826,8 +1838,17 @@
         return 100 - (100 / (1 + rs));
     }
 
-    async function sendAISignal(direction, entry, sl, tp, confidence) {
+    // الدالة المحدثة تقرأ من currentAITrade
+    async function sendAISignal() {
         if (!window.firebaseDB) { showToast('Please wait...'); return; }
+        if (!currentAITrade) { showToast('No trade data found. Please analyze first.'); return; }
+        
+        let direction = currentAITrade.direction;
+        const entry = currentAITrade.entry;
+        const sl = currentAITrade.sl;
+        const tp = currentAITrade.tp;
+        const confidence = currentAITrade.confidence;
+
         if (direction === 'WAIT') { direction = 'BUY'; }
         
         const confirmed = confirm(`📤 Send to all subscribers?\n\n${direction} @ $${entry}\nSL: $${sl}\nTP: $${tp}\nConfidence: ${confidence}%`);
@@ -1869,12 +1890,14 @@
         }
     }
 
-    function applyAITrade(direction, entry, sl, tp) {
-        document.getElementById('signalDirection').value = direction;
-        document.getElementById('signalEntry').value = entry;
-        document.getElementById('signalSL').value = sl;
-        document.getElementById('signalTP').value = tp;
-        document.getElementById('signalNotes').value = `AI suggested ${direction} based on EMA/RSI analysis`;
+    function applyAITrade() {
+        if (!currentAITrade) { showToast('No trade data found.'); return; }
+        
+        document.getElementById('signalDirection').value = currentAITrade.direction;
+        document.getElementById('signalEntry').value = currentAITrade.entry;
+        document.getElementById('signalSL').value = currentAITrade.sl;
+        document.getElementById('signalTP').value = currentAITrade.tp;
+        document.getElementById('signalNotes').value = `AI suggested ${currentAITrade.direction} based on EMA/RSI analysis`;
         
         showToast('✅ Trade applied to form!');
         setTimeout(() => showScreen('sendSignalScreen'), 800);
