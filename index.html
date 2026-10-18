@@ -1296,7 +1296,6 @@
             renderUsers();
         } catch (error) {
             console.error('Error loading users:', error);
-            // ⭐ عرض رسالة خطأ بدلاً من البقاء على شاشة التحميل
             const list = document.getElementById('usersList');
             list.innerHTML = `
                 <div class="empty-state">
@@ -1493,7 +1492,6 @@
 
         try {
             const start = new Date(startDate);
-            // ⭐ تصحيح حساب المدة لجميع الباقات الأربع
             const days = plan === 'Weekly' ? 7 : (plan === '15Days' ? 15 : (plan === 'Monthly' ? 30 : 90));
             const expiry = new Date(start.getTime() + days * 24 * 60 * 60 * 1000);
 
@@ -1518,7 +1516,7 @@
         }
     }
 
-    // ⭐ الدالة الجديدة لإلغاء تفعيل الاشتراك
+    // ===== DEACTIVATE SUBSCRIPTION =====
     async function deactivateUserSubscription() {
         if (!currentUserUID) return;
         if (!confirm('⚠️ Are you sure you want to DEACTIVATE this subscription?\n\nThis will immediately block the user from receiving signals.')) return;
@@ -1565,7 +1563,7 @@
         }
     }
 
-    // ===== SEND SIGNAL =====
+    // ===== SEND SIGNAL (تم إصلاحها بالكامل) =====
     async function sendSignal() {
         const direction = document.getElementById('signalDirection').value;
         const entry = document.getElementById('signalEntry').value.trim();
@@ -1581,14 +1579,25 @@
         try {
             showToast('Sending signal...');
 
-            await addDoc(collection(db, 'signals'), {
+            // التأكد من أن Firebase جاهز لتجنب الفشل الصامت
+            if (!window.firebaseDB) {
+                throw new Error("Firebase is not ready yet. Please wait a moment.");
+            }
+
+            // استدعاء دوال Firebase مباشرة لضمان عملها
+            const fsModule = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");
+            const { collection, addDoc, serverTimestamp } = fsModule;
+
+            await addDoc(collection(window.firebaseDB, 'signals'), {
                 pair: 'XAU/USD',
-                direction: direction,
+                direction: direction.toUpperCase(),
                 entry: entry,
                 stopLoss: sl,
                 takeProfit: tp,
                 notes: notes,
                 status: 'active',
+                source: 'Admin',
+                targetUID: '', // مهم جداً: حقل فارغ يعني أن الإشارة موجهة للجميع
                 createdAt: serverTimestamp()
             });
 
@@ -1600,8 +1609,9 @@
             document.getElementById('signalNotes').value = '';
 
         } catch (error) {
-            console.error(error);
-            showToast('Error sending signal');
+            console.error("Signal Error:", error);
+            // إظهار الخطأ الحقيقي على الشاشة بدلاً من رسالة عامة
+            showToast('❌ Error: ' + error.message);
         }
     }
 
@@ -1811,10 +1821,9 @@
     }
 
     async function sendAISignal(direction, entry, sl, tp, confidence) {
-        if (!db) { showToast('Please wait...'); return; }
+        if (!window.firebaseDB) { showToast('Please wait...'); return; }
         if (direction === 'WAIT') { direction = 'BUY'; }
         
-        // نافذة تأكيد واحدة فقط بدلاً من 5 نوافذ
         const confirmed = confirm(`📤 Send to all subscribers?\n\n${direction} @ $${entry}\nSL: $${sl}\nTP: $${tp}\nConfidence: ${confidence}%`);
         if (!confirmed) return;
         
@@ -1824,7 +1833,6 @@
             const fsModule = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");
             const { collection, addDoc, serverTimestamp } = fsModule;
             
-            // حفظ البيانات مباشرة بالأسماء الصحيحة
             await addDoc(collection(window.firebaseDB, 'signals'), {
                 pair: 'XAU/USD',
                 direction: direction.toUpperCase(),
@@ -1893,7 +1901,7 @@
     });
 </script>
 
-<!-- ================= ADMIN NOTIFICATIONS (مع زر X جديد) ================= -->
+<!-- ================= ADMIN NOTIFICATIONS ================= -->
 <script>
 let adminNotifs = JSON.parse(localStorage.getItem('adminNotifs') || '[]');
 let seenUsers = JSON.parse(localStorage.getItem('seenUsers3') || '[]');
