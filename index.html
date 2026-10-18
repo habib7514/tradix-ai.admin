@@ -1030,9 +1030,10 @@
         <div class="input-group">
             <label>Plan Type</label>
             <select id="activatePlan" dir="ltr" style="text-align: left;">
-                <option value="Monthly">VIP Monthly - $49 (30 days)</option>
-                <option value="Weekly">VIP Weekly - $15 (7 days)</option>
-                <option value="Quarterly">VIP Quarterly - $119 (90 days)</option>
+                <option value="Weekly">VIP Weekly - $10 (7 days)</option>
+                <option value="15Days">VIP 15 Days - $20 (15 days)</option>
+                <option value="Monthly">VIP Monthly - $30 (30 days)</option>
+                <option value="Quarterly">VIP Quarterly - $70 (90 days)</option>
             </select>
         </div>
 
@@ -1487,7 +1488,8 @@
 
         try {
             const start = new Date(startDate);
-            const days = plan === 'Weekly' ? 7 : (plan === 'Monthly' ? 30 : 90);
+            // ⭐ تصحيح حساب المدة لجميع الباقات الأربع
+            const days = plan === 'Weekly' ? 7 : (plan === '15Days' ? 15 : (plan === 'Monthly' ? 30 : 90));
             const expiry = new Date(start.getTime() + days * 24 * 60 * 60 * 1000);
 
             await updateDoc(doc(db, 'users', currentUserUID), {
