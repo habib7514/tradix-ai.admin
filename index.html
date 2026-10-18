@@ -860,6 +860,9 @@
         <button class="btn-block success" onclick="openActivateModal()" id="activateBtn" style="margin-bottom: 8px;">
             ✅ Activate Subscription
         </button>
+        <button class="btn-block danger" onclick="deactivateUserSubscription()" style="margin-bottom: 8px;">
+            🚫 Deactivate Subscription
+        </button>
         <button class="btn-block" style="background: var(--red); color: #fff; margin-bottom: 8px;" onclick="confirmDeleteUser()">
             🗑️ Delete User
         </button>
@@ -1513,6 +1516,33 @@
         }
     }
 
+    // ⭐ الدالة الجديدة لإلغاء تفعيل الاشتراك
+    async function deactivateUserSubscription() {
+        if (!currentUserUID) return;
+        if (!confirm('⚠️ Are you sure you want to DEACTIVATE this subscription?\n\nThis will immediately block the user from receiving signals.')) return;
+
+        try {
+            showToast('⏳ Deactivating...');
+            await updateDoc(doc(db, 'users', currentUserUID), {
+                status: 'inactive',
+                plan: null,
+                startDate: null,
+                expiryDate: null,
+                txHash: null,
+                depositAmount: null
+            });
+            
+            showToast('✅ Subscription Deactivated successfully');
+            setTimeout(() => { 
+                openUserDetail(currentUserUID); 
+                loadDashboard(); 
+            }, 1000);
+        } catch (error) {
+            console.error(error);
+            showToast('❌ Error deactivating subscription');
+        }
+    }
+
     // ===== DELETE USER =====
     async function confirmDeleteUser() {
         if (!currentUserUID) return;
@@ -1781,20 +1811,36 @@
     async function sendAISignal(direction, entry, sl, tp, confidence) {
         if (!db) { showToast('Please wait...'); return; }
         if (direction === 'WAIT') { direction = 'BUY'; }
+        
+        // نافذة تأكيد واحدة فقط بدلاً من 5 نوافذ
         const confirmed = confirm(`📤 Send to all subscribers?\n\n${direction} @ $${entry}\nSL: $${sl}\nTP: $${tp}\nConfidence: ${confidence}%`);
         if (!confirmed) return;
+        
         try {
             showToast('Sending...');
-            await addDoc(collection(db, 'signals'), {
-                pair: 'XAU/USD', direction: direction, entry: entry,
-                stopLoss: sl, takeProfit: tp, confidence: confidence,
-                notes: `AI ${direction} signal`, status: 'active', source: 'AI',
+            
+            const fsModule = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");
+            const { collection, addDoc, serverTimestamp } = fsModule;
+            
+            // حفظ البيانات مباشرة بالأسماء الصحيحة
+            await addDoc(collection(window.firebaseDB, 'signals'), {
+                pair: 'XAU/USD',
+                direction: direction.toUpperCase(),
+                entry: entry,
+                stopLoss: sl,
+                takeProfit: tp,
+                confidence: confidence,
+                notes: `AI ${direction} signal`,
+                status: 'active',
+                source: 'AI',
+                targetUID: '', // إرسال للجميع
                 createdAt: serverTimestamp()
             });
-            showToast('✅ Signal sent!');
+            
+            showToast('✅ Signal sent successfully!');
         } catch (error) {
             console.error(error);
-            showToast('Error sending signal');
+            showToast('Error: ' + error.message);
         }
     }
 
@@ -1808,60 +1854,6 @@
         showToast('✅ Trade applied to form!');
         setTimeout(() => showScreen('sendSignalScreen'), 800);
     }
-
-    // ===== SEND SIGNAL BY EMAIL (Manual) =====
-    window.sendAISignal = async function(direction, entry, sl, tp, confidence) {
-        const newDirection = prompt('Direction (BUY/SELL):', direction);
-        if (!newDirection) return;
-        const newEntry = prompt('Entry Price:', entry);
-        if (!newEntry) return;
-        const newSL = prompt('Stop Loss:', sl);
-        if (!newSL) return;
-        const newTP = prompt('Take Profit:', tp);
-        if (!newTP) return;
-        
-        const sendTo = prompt('Send to:\n- ALL for everyone\n- Enter email for specific user', 'ALL');
-        if (!sendTo) return;
-        
-        try {
-            const fsModule = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");
-            const { collection, addDoc, serverTimestamp, query, where, getDocs } = fsModule;
-            
-            let targetUID = '';
-            let notes = `AI ${newDirection} signal`;
-            
-            if (sendTo.toUpperCase() !== 'ALL') {
-                const usersRef = collection(window.firebaseDB, 'users');
-                const q = query(usersRef, where('email', '==', sendTo.trim()));
-                const snap = await getDocs(q);
-                if (snap.empty) {
-                    showToast('❌ User not found: ' + sendTo);
-                    return;
-                }
-                snap.forEach(doc => { targetUID = doc.id; });
-                notes += ` (Private)`;
-            }
-            
-            await addDoc(collection(window.firebaseDB, 'signals'), {
-                pair: 'XAU/USD',
-                direction: newDirection.toUpperCase(),
-                entry: newEntry,
-                stopLoss: newSL,
-                takeProfit: newTP,
-                confidence: confidence,
-                notes: notes,
-                status: 'active',
-                source: 'AI-Manual',
-                targetUID: targetUID,
-                createdAt: serverTimestamp()
-            });
-            
-            showToast('✅ Signal sent successfully!');
-        } catch (error) {
-            console.error(error);
-            showToast('Error: ' + error.message);
-        }
-    };
 
     // ===== CLEAR ALL SIGNALS =====
     async function clearAllSignals() {
