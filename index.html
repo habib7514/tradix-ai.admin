@@ -1289,7 +1289,16 @@
 
             renderUsers();
         } catch (error) {
-            console.error(error);
+            console.error('Error loading users:', error);
+            // ⭐ عرض رسالة خطأ بدلاً من البقاء على شاشة التحميل
+            const list = document.getElementById('usersList');
+            list.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">⚠️</div>
+                    <h3>Error Loading Users</h3>
+                    <p>${error.message || 'Please check your Firebase rules or internet connection.'}</p>
+                </div>
+            `;
         }
     }
 
