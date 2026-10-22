@@ -1171,7 +1171,7 @@
                 allUsers.push({ uid: docSnap.id, ...docSnap.data() });
             });
 
-            // تحديث لوحة التحكم
+            // تحديث لوحة التحكم (إحصائيات عامة لكل المستخدمين بغض النظر عن الوضع)
             const total = allUsers.length;
             const active = allUsers.filter(u => u.status === 'active').length;
             const pending = allUsers.filter(u => u.status === 'pending').length;
