@@ -9,26 +9,26 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK -->
+    <!-- ✅ تم تصحيح إعدادات Firebase لتتصل بنفس قاعدة بيانات التطبيق الرئيسي -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
         import { getFirestore } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyClehKAxJTZjsHA1ye8mDyRQcPBMPmPC3c",
-            authDomain: "tradix-ai.firebaseapp.com",
-            projectId: "tradix-ai",
-            storageBucket: "tradix-ai.firebasestorage.app",
-            messagingSenderId: "154893572354",
-            appId: "1:154893572354:web:cd017c0413c7df41950a1b"
+            apiKey: "AIzaSyAPHGtTeDNamwyR2kfg-b9ABp7pNyyiPKM",
+            authDomain: "tradelix-ai.firebaseapp.com",
+            projectId: "tradelix-ai",
+            storageBucket: "tradelix-ai.firebasestorage.app",
+            messagingSenderId: "374195897663",
+            appId: "1:374195897663:web:e1ed0ce2c30a4b6aeabf8a"
         };
 
         const app = initializeApp(firebaseConfig);
         window.firebaseAuth = getAuth(app);
         window.firebaseDB = getFirestore(app);
         window.firebaseReady = true;
-        console.log('✅ Firebase Admin initialized');
+        console.log('✅ Firebase Admin initialized & Connected to Main DB');
     </script>
     
     <style>
@@ -570,7 +570,6 @@
         .empty-state h3 { color: var(--gold); margin-bottom: 6px; }
         .empty-state p { font-size: 13px; }
 
-        /* ⭐ NEW: CLOSE X BUTTON IN NOTIFICATIONS MODAL */
         .notif-close-top {
             position: absolute;
             top: 14px;
@@ -922,7 +921,7 @@
     </div>
 
     <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px; line-height: 1.6;">
-        Send a new gold signal to all active subscribers. It will appear instantly in their app.
+        Send a new signal to the database. Gold app reads from 'gold_signals', Crypto app reads from 'tradelix_signals'.
     </p>
 
     <!-- Signal Form -->
@@ -930,8 +929,16 @@
         <h3 style="color: var(--gold); margin-bottom: 16px; font-size: 16px;">📈 Signal Details</h3>
         
         <div class="input-group">
-            <label>Pair</label>
-            <input type="text" id="signalPair" value="XAU/USD" readonly style="color: var(--gold);">
+            <label>Target Audience (Collection)</label>
+            <select id="signalCollection">
+                <option value="gold_signals">🥇 Gold Subscribers (gold_signals)</option>
+                <option value="tradelix_signals">🪙 Crypto Subscribers (tradelix_signals)</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Pair / Coin</label>
+            <input type="text" id="signalPair" value="XAU/USD" placeholder="e.g. XAU/USD or BTC">
         </div>
 
         <div class="input-group">
@@ -962,7 +969,7 @@
             <textarea id="signalNotes" placeholder="Additional analysis or notes..."></textarea>
         </div>
 
-        <button class="btn-block" onclick="sendSignal()">📤 Send to All Subscribers</button>
+        <button class="btn-block" onclick="sendSignal()">📤 Send Signal</button>
     </div>
 
     <!-- Bottom Nav -->
@@ -1060,6 +1067,15 @@
         </div>
 
         <div class="input-group">
+            <label>Service Type</label>
+            <select id="activatePlanType">
+                <option value="crypto">🪙 Crypto (Tradelix)</option>
+                <option value="gold">🥇 Gold (Tradix)</option>
+                <option value="both">⭐ Both (Crypto + Gold)</option>
+            </select>
+        </div>
+
+        <div class="input-group">
             <label>Start Date</label>
             <input type="date" id="activateStartDate">
         </div>
@@ -1072,11 +1088,6 @@
         </button>
     </div>
 </div>
-
-<!-- ================= FLOATING AI BUTTON ================= -->
-<button id="floatingAI" onclick="showScreen('aiAnalysisScreen')" style="display:none;">
-    🤖
-</button>
 
 <!-- ================= TOAST ================= -->
 <div id="toast" class="toast">Message</div>
@@ -1120,7 +1131,6 @@
         if (screen) screen.classList.add('active');
         window.scrollTo(0, 0);
         
-        // ✅ استدعاء دالة تحميل البيانات عند فتح الشاشة
         if (id === 'dashboardScreen') loadDashboard();
         if (id === 'usersScreen') loadUsers();
     }
@@ -1156,22 +1166,21 @@
             onSnapshot = fsModule.onSnapshot;
 
             console.log('✅ Firebase Admin ready');
-            setupRealtimeListener(); // ✅ تفعيل التحديث الفوري
+            setupRealtimeListener(); 
         } else {
             setTimeout(initFirebase, 500);
         }
     }
 
-    // ✅ دالة التحديث الفوري للمستخدمين
+    // ✅ دالة التحديث الفوري للمستخدمين (تقرأ من tradelix_users)
     let allUsers = [];
     function setupRealtimeListener() {
-        onSnapshot(collection(db, 'users'), (snapshot) => {
+        onSnapshot(collection(db, 'tradelix_users'), (snapshot) => {
             allUsers = [];
             snapshot.forEach(docSnap => {
                 allUsers.push({ uid: docSnap.id, ...docSnap.data() });
             });
 
-            // تحديث لوحة التحكم (إحصائيات عامة لكل المستخدمين بغض النظر عن الوضع)
             const total = allUsers.length;
             const active = allUsers.filter(u => u.status === 'active').length;
             const pending = allUsers.filter(u => u.status === 'pending').length;
@@ -1182,7 +1191,6 @@
             if (document.getElementById('statPendingUsers')) document.getElementById('statPendingUsers').textContent = pending;
             if (document.getElementById('statInactiveUsers')) document.getElementById('statInactiveUsers').textContent = inactive;
 
-            // تحديث النشاط الأخير
             const recent = [...allUsers].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)).slice(0, 3);
             const recentDiv = document.getElementById('recentActivity');
             if (recentDiv) {
@@ -1203,7 +1211,6 @@
                 }
             }
 
-            // تحديث قائمة المستخدمين إذا كنا في شاشتها
             if (document.getElementById('usersScreen').classList.contains('active')) {
                 renderUsers();
             }
@@ -1277,7 +1284,6 @@
 
     async function loadUsers() {
         if (!db) { setTimeout(loadUsers, 500); return; }
-        // التحديث يتم تلقائياً عبر setupRealtimeListener
         if(allUsers.length > 0) renderUsers();
     }
 
@@ -1367,7 +1373,8 @@
         currentUserUID = uid;
         
         try {
-            const userDoc = await getDoc(doc(db, 'users', uid));
+            // ✅ التعديل هنا: القراءة من tradelix_users
+            const userDoc = await getDoc(doc(db, 'tradelix_users', uid));
             if (!userDoc.exists()) {
                 showToast('User not found');
                 return;
@@ -1447,6 +1454,7 @@
         if (!currentUserUID) return;
 
         const plan = document.getElementById('activatePlan').value;
+        const planType = document.getElementById('activatePlanType').value;
         const startDate = document.getElementById('activateStartDate').value;
 
         if (!startDate) {
@@ -1459,9 +1467,11 @@
             const days = plan === 'Weekly' ? 7 : (plan === '15Days' ? 15 : (plan === 'Monthly' ? 30 : 90));
             const expiry = new Date(start.getTime() + days * 24 * 60 * 60 * 1000);
 
-            await updateDoc(doc(db, 'users', currentUserUID), {
+            // ✅ التعديل هنا: التحديث في tradelix_users
+            await updateDoc(doc(db, 'tradelix_users', currentUserUID), {
                 status: 'active',
                 plan: 'VIP ' + plan,
+                planType: planType, // إضافة نوع الباقة (ذهب أو عملات)
                 startDate: startDate,
                 expiryDate: expiry.toISOString().split('T')[0],
                 activatedAt: serverTimestamp()
@@ -1486,9 +1496,11 @@
 
         try {
             showToast('⏳ Deactivating...');
-            await updateDoc(doc(db, 'users', currentUserUID), {
+            // ✅ التعديل هنا: التحديث في tradelix_users
+            await updateDoc(doc(db, 'tradelix_users', currentUserUID), {
                 status: 'inactive',
                 plan: null,
+                planType: null,
                 startDate: null,
                 expiryDate: null,
                 txHash: null,
@@ -1513,7 +1525,8 @@
         if (!confirmed) return;
 
         try {
-            await deleteDoc(doc(db, 'users', currentUserUID));
+            // ✅ التعديل هنا: الحذف من tradelix_users
+            await deleteDoc(doc(db, 'tradelix_users', currentUserUID));
             showToast('✅ User deleted');
             setTimeout(() => {
                 showScreen('usersScreen');
@@ -1526,14 +1539,16 @@
 
     // ===== SEND SIGNAL =====
     async function sendSignal() {
+        const targetCollection = document.getElementById('signalCollection').value;
+        const pair = document.getElementById('signalPair').value.trim();
         const direction = document.getElementById('signalDirection').value;
         const entry = document.getElementById('signalEntry').value.trim();
         const sl = document.getElementById('signalSL').value.trim();
         const tp = document.getElementById('signalTP').value.trim();
         const notes = document.getElementById('signalNotes').value.trim();
 
-        if (!entry || !sl || !tp) {
-            showToast('Please fill Entry, SL, and TP');
+        if (!pair || !entry || !sl || !tp) {
+            showToast('Please fill all fields');
             return;
         }
 
@@ -1547,8 +1562,9 @@
             const fsModule = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");
             const { collection, addDoc, serverTimestamp } = fsModule;
 
-            await addDoc(collection(window.firebaseDB, 'signals'), {
-                pair: 'XAU/USD',
+            await addDoc(collection(window.firebaseDB, targetCollection), {
+                pair: pair,
+                coin: pair.replace('/USDT', ''), // للتطابق مع التطبيق الرئيسي
                 direction: direction.toUpperCase(),
                 entry: entry,
                 stopLoss: sl,
@@ -1564,7 +1580,7 @@
                 createdAt: serverTimestamp()
             });
 
-            showToast('✅ Signal sent to all subscribers!');
+            showToast('✅ Signal sent successfully!');
             
             document.getElementById('signalEntry').value = '';
             document.getElementById('signalSL').value = '';
@@ -1800,7 +1816,7 @@
 
         if (direction === 'WAIT') { direction = 'BUY'; }
         
-        const confirmed = confirm(`📤 Send to all subscribers?\n\n${direction} @ $${entry}\nSL: $${sl}\nTP: $${tp}\nConfidence: ${confidence}%`);
+        const confirmed = confirm(`📤 Send to Gold Subscribers?\n\n${direction} @ $${entry}\nSL: $${sl}\nTP: $${tp}\nConfidence: ${confidence}%`);
         if (!confirmed) return;
         
         try {
@@ -1808,7 +1824,8 @@
             const fsModule = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");
             const { collection, addDoc, serverTimestamp } = fsModule;
             
-            await addDoc(collection(window.firebaseDB, 'signals'), {
+            // الافتراضي هو إرسال إشارات الذكاء الاصطناعي للمجموعة الذهبية
+            await addDoc(collection(window.firebaseDB, 'gold_signals'), {
                 pair: 'XAU/USD',
                 direction: direction.toUpperCase(),
                 entry: entry,
@@ -1940,7 +1957,7 @@ async function initAdminNotif() {
         const m = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js");
         const { collection, onSnapshot, getDocs } = m;
         if (seenUsers.length === 0) {
-            const snap = await getDocs(collection(window.firebaseDB, 'users'));
+            const snap = await getDocs(collection(window.firebaseDB, 'tradelix_users')); // ✅ التعديل هنا
             snap.forEach(d => {
                 seenUsers.push(d.id);
                 const data = d.data();
@@ -1948,7 +1965,8 @@ async function initAdminNotif() {
             });
             saveNotifs();
         }
-        onSnapshot(collection(window.firebaseDB, 'users'), s => {
+        // ✅ التعديل هنا: مراقبة tradelix_users
+        onSnapshot(collection(window.firebaseDB, 'tradelix_users'), s => {
             s.docChanges().forEach(c => {
                 const uid = c.doc.id;
                 const d = c.doc.data();
@@ -1975,4 +1993,4 @@ setTimeout(initAdminNotif, 3000);
 </script>
 
 </body>
-</html> 
+</html>
