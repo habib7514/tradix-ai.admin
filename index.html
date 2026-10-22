@@ -9,7 +9,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
     
-    <!-- ✅ تم تصحيح إعدادات Firebase لتتصل بقاعدة بيانات التطبيق الرئيسي -->
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
@@ -71,6 +71,13 @@
         .header-title h1 { font-size: 16px; font-weight: 900; color: var(--gold); letter-spacing: 1px; }
         .header-title span { font-size: 9px; color: var(--red); font-weight: 700; letter-spacing: 2px; }
         .bell-icon { background: #1a1a1a; border: 1px solid #333; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--gold); cursor: pointer; position: relative; }
+        
+        /* أزرار التبديل */
+        .mode-toggle { display: flex; background: var(--card-bg); border-radius: 12px; padding: 4px; border: 1px solid var(--card-border); margin-bottom: 20px; }
+        .mode-btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: 900; font-size: 14px; cursor: pointer; transition: 0.3s; font-family: inherit; }
+        .mode-btn.active { background: var(--gold); color: #000; box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+        .mode-btn.inactive { background: transparent; color: var(--text-muted); }
+
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .stat-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 16px; text-align: center; }
         .stat-card .stat-icon { font-size: 26px; margin-bottom: 6px; }
@@ -134,9 +141,13 @@
         </div>
     </div>
 
-    <!-- ❌ تم إزالة أزرار Tradelix و Tradix Gold من هنا نهائياً -->
-    <!-- الإحصائيات أصبحت عامة لكل المستخدمين -->
+    <!-- ✅ تم إرجاع الأزرار -->
+    <div class="mode-toggle">
+        <button id="btnModeCrypto" class="mode-btn active" onclick="switchMode('crypto')">🪙 Tradelix</button>
+        <button id="btnModeGold" class="mode-btn inactive" onclick="switchMode('gold')">🥇 Tradix Gold</button>
+    </div>
 
+    <!-- ✅ الإحصائيات تعرض الرقم الإجمالي دائماً -->
     <div class="stats-grid">
         <div class="stat-card total"><div class="stat-icon">👥</div><div class="stat-value" id="statTotalUsers">0</div><div class="stat-label">TOTAL USERS</div></div>
         <div class="stat-card active"><div class="stat-icon">✅</div><div class="stat-value" id="statActiveUsers">0</div><div class="stat-label">ACTIVE</div></div>
@@ -166,6 +177,13 @@
         <div class="header-left"><div class="header-logo">A</div><div class="header-title"><h1>USERS</h1><span>● MANAGEMENT</span></div></div>
         <div class="bell-icon" onclick="openNotifModal()">🔔</div>
     </div>
+    
+    <!-- ✅ أزرار التبديل موجودة هنا أيضاً لفلترة القائمة -->
+    <div class="mode-toggle">
+        <button id="btnUserModeCrypto" class="mode-btn active" onclick="switchMode('crypto')">🪙 Tradelix</button>
+        <button id="btnUserModeGold" class="mode-btn inactive" onclick="switchMode('gold')">🥇 Tradix Gold</button>
+    </div>
+
     <div class="input-group"><input type="text" id="searchUsers" placeholder="🔍 Search by name or email..." oninput="filterUsers()"></div>
     <div style="display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px;">
         <button class="btn-small view" onclick="filterByStatus('all')" id="filterAll">All</button>
@@ -219,17 +237,22 @@
         <div class="header-left"><div class="header-logo">A</div><div class="header-title"><h1>SEND SIGNAL</h1><span>● TRADING</span></div></div>
         <div class="bell-icon" onclick="openNotifModal()">🔔</div>
     </div>
-    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Send a new signal to the database. Choose the target audience below.</p>
+    
+    <div class="mode-toggle">
+        <button id="btnSignalCrypto" class="mode-btn active" onclick="switchMode('crypto')">🪙 Tradelix</button>
+        <button id="btnSignalGold" class="mode-btn inactive" onclick="switchMode('gold')">🥇 Tradix Gold</button>
+    </div>
+
+    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Send a new signal. Based on the mode selected above, the signal will go to the correct app.</p>
+    
     <div class="card">
         <h3 style="color: var(--gold); margin-bottom: 16px; font-size: 16px;">📈 Signal Details</h3>
+        
         <div class="input-group">
-            <label>Target App</label>
-            <select id="signalCollection">
-                <option value="gold_signals">🥇 Gold App (gold_signals)</option>
-                <option value="tradelix_signals">🪙 Crypto App (tradelix_signals)</option>
-            </select>
+            <label>Pair / Coin</label>
+            <input type="text" id="signalPair" value="XAU/USD">
         </div>
-        <div class="input-group"><label>Pair / Coin</label><input type="text" id="signalPair" value="XAU/USD"></div>
+
         <div class="input-group"><label>Direction</label><select id="signalDirection"><option value="BUY">BUY (Long)</option><option value="SELL">SELL (Short)</option></select></div>
         <div class="input-group"><label>Entry Price</label><input type="text" id="signalEntry"></div>
         <div class="input-group"><label>Stop Loss</label><input type="text" id="signalSL"></div>
@@ -264,6 +287,8 @@
     let signInWithEmailAndPassword, signOut;
     let collection, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, serverTimestamp, onSnapshot;
 
+    let appMode = 'crypto'; // الوضع الافتراضي
+
     setTimeout(() => {
         document.getElementById('splash').classList.add('hide');
         setTimeout(() => {
@@ -278,6 +303,47 @@
         window.scrollTo(0, 0);
     }
 
+    // ✅ دالة التبديل بين الذهب والعملات
+    function switchMode(mode) {
+        appMode = mode;
+        
+        // تحديث أزرار لوحة التحكم
+        if(document.getElementById('btnModeCrypto')) {
+            document.getElementById('btnModeCrypto').className = mode === 'crypto' ? 'mode-btn active' : 'mode-btn inactive';
+            document.getElementById('btnModeGold').className = mode === 'gold' ? 'mode-btn active' : 'mode-btn inactive';
+        }
+        // تحديث أزرار قائمة المستخدمين
+        if(document.getElementById('btnUserModeCrypto')) {
+            document.getElementById('btnUserModeCrypto').className = mode === 'crypto' ? 'mode-btn active' : 'mode-btn inactive';
+            document.getElementById('btnUserModeGold').className = mode === 'gold' ? 'mode-btn active' : 'mode-btn inactive';
+        }
+        // تحديث أزرار إرسال الإشارات
+        if(document.getElementById('btnSignalCrypto')) {
+            document.getElementById('btnSignalCrypto').className = mode === 'crypto' ? 'mode-btn active' : 'mode-btn inactive';
+            document.getElementById('btnSignalGold').className = mode === 'gold' ? 'mode-btn active' : 'mode-btn inactive';
+        }
+
+        // تغيير اسم العملة الافتراضية في نموذج الإرسال
+        if (mode === 'gold') {
+            if(document.getElementById('signalPair')) document.getElementById('signalPair').value = 'XAU/USD';
+        } else {
+            if(document.getElementById('signalPair')) document.getElementById('signalPair').value = 'BTC/USDT';
+        }
+
+        // إعادة رسم قائمة المستخدمين بناءً على الوضع الجديد
+        if (document.getElementById('usersScreen').classList.contains('active')) {
+            renderUsers();
+        }
+    }
+
+    // ✅ دالة فلترة المستخدمين (تستخدم فقط في قائمة المستخدمين)
+    function filterUsersByMode(users) {
+        return users.filter(u => {
+            if (u.status !== 'active' && u.status !== 'pending') return true; // نعرض غير النشطين دائماً
+            return u.planType === appMode || u.planType === 'both' || !u.planType;
+        });
+    }
+
     async function initFirebase() {
         if (window.firebaseReady) {
             const authModule = await import("https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js");
@@ -289,12 +355,11 @@
             updateDoc = fsModule.updateDoc; deleteDoc = fsModule.deleteDoc; addDoc = fsModule.addDoc; serverTimestamp = fsModule.serverTimestamp;
             onSnapshot = fsModule.onSnapshot;
             
-            // ✅ مراقبة tradelix_users (القاعدة الرئيسية)
             onSnapshot(collection(db, 'tradelix_users'), (snapshot) => {
                 allUsers = [];
                 snapshot.forEach(docSnap => allUsers.push({ uid: docSnap.id, ...docSnap.data() }));
                 
-                // تحديث الإحصائيات فوراً
+                // ✅ الإحصائيات تعرض الرقم الإجمالي دائماً (بدون فلترة)
                 document.getElementById('statTotalUsers').textContent = allUsers.length;
                 document.getElementById('statActiveUsers').textContent = allUsers.filter(u => u.status === 'active').length;
                 document.getElementById('statPendingUsers').textContent = allUsers.filter(u => u.status === 'pending').length;
@@ -341,14 +406,17 @@
     }
 
     function renderUsers() {
-        let filtered = allUsers.filter(u => {
+        // ✅ هنا نستخدم الفلترة (حسب الوضع المختار)
+        let base = filterUsersByMode(allUsers);
+        
+        let filtered = base.filter(u => {
             if (searchQuery && !((u.name||'').toLowerCase().includes(searchQuery) || (u.email||'').toLowerCase().includes(searchQuery))) return false;
             if (currentFilter !== 'all' && (u.status || 'inactive') !== currentFilter) return false;
             return true;
         });
         filtered.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
         const list = document.getElementById('usersList');
-        if (filtered.length === 0) { list.innerHTML = `<div class="empty-state"><h3>No Users Found</h3></div>`; return; }
+        if (filtered.length === 0) { list.innerHTML = `<div class="empty-state"><h3>No Users Found in this mode</h3></div>`; return; }
         list.innerHTML = filtered.map(u => `
             <div class="user-card" onclick="openUserDetail('${u.uid}')">
                 <div class="user-header"><div><div class="user-name">${u.name || 'Unknown'}</div><div class="user-email">${u.email || ''}</div></div><span class="user-status ${u.status || 'inactive'}">${(u.status || 'inactive').toUpperCase()}</span></div>
@@ -399,7 +467,8 @@
     }
 
     async function sendSignal() {
-        const col = document.getElementById('signalCollection').value;
+        // ✅ الإرسال يتم بناءً على الوضع المختار
+        const col = appMode === 'gold' ? 'gold_signals' : 'tradelix_signals';
         const pair = document.getElementById('signalPair').value.trim();
         const dir = document.getElementById('signalDirection').value;
         const entry = document.getElementById('signalEntry').value.trim();
