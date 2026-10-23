@@ -73,74 +73,6 @@
         .bell-icon { background: #1a1a1a; border: 1px solid #333; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--gold); cursor: pointer; position: relative; }
         .notifBadge { position: absolute; top: -4px; right: -4px; background: var(--red); color: #fff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px rgba(246, 70, 93, 0.8); animation: pulse 1.5s infinite; pointer-events: none; }
 
-        /* ✅ التصميم الجديد لزر التوصيات (أزرق، لامع، يتحرك) */
-        .recommendation-blue-btn {
-            font-family: 'Tajawal', sans-serif;
-            font-size: 17px;
-            font-weight: 900;
-            color: #FFFFFF;
-            letter-spacing: 0.5px;
-            padding: 16px 26px;
-            background: linear-gradient(180deg, #0099FF 0%, #0066FF 50%, #0044CC 100%);
-            border-radius: 50px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            margin-bottom: 20px;
-            box-shadow: 
-                0 0 12px rgba(0, 150, 255, 0.9),
-                0 0 25px rgba(0, 150, 255, 0.7),
-                0 0 40px rgba(0, 150, 255, 0.5),
-                inset 0 0 15px rgba(255, 255, 255, 0.15),
-                inset 0 2px 4px rgba(255, 255, 255, 0.4);
-            border: 1.5px solid rgba(255, 255, 255, 0.4);
-            text-shadow: 
-                0 0 6px rgba(255, 255, 255, 0.9),
-                0 0 12px rgba(0, 150, 255, 1);
-            animation: join-pulse 2s ease-in-out infinite;
-            overflow: hidden;
-            white-space: nowrap;
-            cursor: pointer;
-            z-index: 999;
-        }
-        .recommendation-blue-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent 0%, transparent 40%, rgba(255, 255, 255, 0.6) 50%, transparent 60%, transparent 100%);
-            animation: join-shine 2.5s infinite;
-            pointer-events: none;
-        }
-        @keyframes join-shine {
-            0% { left: -100%; }
-            50%, 100% { left: 100%; }
-        }
-        @keyframes join-pulse {
-            0%, 100% {
-                box-shadow: 
-                    0 0 12px rgba(0, 150, 255, 0.9),
-                    0 0 25px rgba(0, 150, 255, 0.7),
-                    0 0 40px rgba(0, 150, 255, 0.5),
-                    inset 0 0 15px rgba(255, 255, 255, 0.15),
-                    inset 0 2px 4px rgba(255, 255, 255, 0.4);
-                transform: scale(1);
-            }
-            50% {
-                box-shadow: 
-                    0 0 18px rgba(0, 150, 255, 1),
-                    0 0 35px rgba(0, 150, 255, 0.9),
-                    0 0 55px rgba(0, 150, 255, 0.7),
-                    inset 0 0 20px rgba(255, 255, 255, 0.25),
-                    inset 0 2px 4px rgba(255, 255, 255, 0.5);
-                transform: scale(1.03);
-            }
-        }
-
         /* أزرار التبديل */
         .mode-toggle { display: flex; background: var(--card-bg); border-radius: 12px; padding: 4px; border: 1px solid var(--card-border); margin-bottom: 20px; }
         .mode-btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: 900; font-size: 14px; cursor: pointer; transition: 0.3s; font-family: inherit; }
@@ -236,11 +168,6 @@
         </div>
     </div>
 
-    <!-- ✅ الزر الأزرق المتحرك للتوصيات في أعلى الصفحة فقط -->
-    <div class="recommendation-blue-btn" onclick="showScreen('recommendationsScreen')">
-        💡 Recommendations
-    </div>
-
     <div class="mode-toggle">
         <button id="btnModeCrypto" class="mode-btn active" onclick="switchMode('crypto')">🪙 Tradelix</button>
         <button id="btnModeGold" class="mode-btn inactive" onclick="switchMode('gold')">🥇 Tradix Gold</button>
@@ -256,6 +183,8 @@
     <div class="section-title">⚡ QUICK ACTIONS</div>
     <div class="card" style="padding: 14px;">
         <button class="btn-block" onclick="showScreen('sendSignalScreen')" style="margin-bottom: 8px;">📤 Send New Signal</button>
+        <!-- ✅ الزر الأزرق للتوصيات هنا (مضمون الظهور) -->
+        <button class="btn-block" onclick="showScreen('recommendationsScreen')" style="margin-bottom: 8px; background: linear-gradient(180deg, #0099FF 0%, #0066FF 100%); color: #fff; box-shadow: 0 0 15px rgba(0, 150, 255, 0.8); font-size: 16px;">💡 Recommendations (التوصيات)</button>
         <button class="btn-block outline" onclick="showScreen('usersScreen')">👥 Manage Users</button>
     </div>
 
