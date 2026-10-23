@@ -101,7 +101,7 @@
         .detail-row span:first-child { color: var(--text-muted); }
         .detail-row span:last-child { color: var(--gold-light); font-weight: 700; text-align: left; max-width: 60%; word-break: break-all; }
         
-        /* Bottom Nav - 6 items */
+        /* Bottom Nav */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #0d0d0d; border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 10px 0 18px 0; z-index: 9999; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 9px; text-decoration: none; width: 16.66%; cursor: pointer; background: none; border: none; font-family: inherit; padding: 4px 0; }
         .nav-item.active { color: var(--gold); }
@@ -183,13 +183,15 @@
     <div class="section-title">⚡ QUICK ACTIONS</div>
     <div class="card" style="padding: 14px;">
         <button class="btn-block" onclick="showScreen('sendSignalScreen')" style="margin-bottom: 8px;">📤 Send New Signal</button>
+        <!-- ✅ تمت إضافة زر التوصيات هنا ليكون ظاهراً في الداشبورد -->
+        <button class="btn-block outline" onclick="showScreen('recommendationsScreen')" style="margin-bottom: 8px; border-color: var(--gold); color: var(--gold);">💡 Send Recommendation</button>
         <button class="btn-block outline" onclick="showScreen('usersScreen')">👥 Manage Users</button>
     </div>
 
     <div class="section-title">🔔 RECENT ACTIVITY</div>
     <div id="recentActivity"><div class="empty-state"><div class="icon">📭</div><h3>No Activity Yet</h3></div></div>
 
-    <!-- 6 BUTTONS -->
+    <!-- 6 BUTTONS Bottom Nav -->
     <div class="bottom-nav">
         <button class="nav-item active" onclick="showScreen('dashboardScreen')"><span class="icon">📊</span><span>Dash</span></button>
         <button class="nav-item" onclick="showScreen('usersScreen')"><span class="icon">👥</span><span>Users</span></button>
@@ -265,7 +267,7 @@
     </div>
 </div>
 
-<!-- TRADES SCREEN (Restored) -->
+<!-- TRADES SCREEN -->
 <div id="tradesScreen" class="screen">
     <div class="header">
         <div class="header-left"><div class="header-logo">A</div><div class="header-title"><h1>ACTIVE TRADES</h1><span>● MANAGEMENT</span></div></div>
@@ -289,7 +291,7 @@
     </div>
 </div>
 
-<!-- ✅ NEW: RECOMMENDATIONS SCREEN -->
+<!-- RECOMMENDATIONS SCREEN -->
 <div id="recommendationsScreen" class="screen">
     <div class="header">
         <div class="header-left"><div class="header-logo">A</div><div class="header-title"><h1>RECOMMENDATIONS</h1><span>● INVESTMENTS</span></div></div>
@@ -675,7 +677,7 @@
     }
 
     // ==========================================
-    // ✅ TRADES LOGIC (RESTORED)
+    // ✅ TRADES LOGIC
     // ==========================================
     function renderTrades() {
         const listDiv = document.getElementById('tradesList');
@@ -728,7 +730,7 @@
     }
 
     // ==========================================
-    // ✅ RECOMMENDATIONS LOGIC (NEW)
+    // ✅ RECOMMENDATIONS LOGIC
     // ==========================================
     function renderRecommendations() {
         const listDiv = document.getElementById('recsList');
@@ -801,7 +803,7 @@
     }
 
     // ==========================================
-    // ✅ NOTIFICATIONS LOGIC (ADMIN)
+    // ✅ NOTIFICATIONS LOGIC
     // ==========================================
     let adminNotifs = JSON.parse(localStorage.getItem('adminNotifs') || '[]');
 
