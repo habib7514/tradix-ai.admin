@@ -261,7 +261,7 @@
     </div>
 </div>
 
-<!-- ✅ NEW: RECOMMENDATIONS SCREEN -->
+<!-- ✅ شاشة التوصيات -->
 <div id="recommendationsScreen" class="screen">
     <div class="header">
         <div class="header-left"><div class="header-logo">A</div><div class="header-title"><h1>RECOMMENDATIONS</h1><span>● INVESTMENTS</span></div></div>
@@ -465,7 +465,6 @@
         });
     }
 
-    // ✅ تعبئة قوائم العملات
     function populateCoinSelects() {
         const recSelect = document.getElementById('recCoin');
         if(!recSelect) return;
@@ -488,7 +487,6 @@
             updateDoc = fsModule.updateDoc; deleteDoc = fsModule.deleteDoc; addDoc = fsModule.addDoc; serverTimestamp = fsModule.serverTimestamp;
             onSnapshot = fsModule.onSnapshot;
             
-            // Users Snapshot
             onSnapshot(collection(db, 'tradelix_users'), (snapshot) => {
                 allUsers = [];
                 snapshot.forEach(docSnap => allUsers.push({ uid: docSnap.id, ...docSnap.data() }));
@@ -509,7 +507,6 @@
                         </div>`).join('');
                 }
                 
-                // Notify on new user
                 snapshot.docChanges().forEach(change => {
                     if (change.type === "added") {
                         const data = change.doc.data();
@@ -520,7 +517,6 @@
                 });
             });
 
-            // Recommendations Snapshot
             onSnapshot(collection(db, 'tradelix_recommendations'), (snapshot) => {
                 allRecommendations = [];
                 snapshot.forEach(docSnap => allRecommendations.push({ id: docSnap.id, ...docSnap.data() }));
